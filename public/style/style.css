@@ -1,0 +1,48 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 0;
+}
+#stage {
+  position: absolute;
+  border: 1px solid #000;
+}
+#toolPicker {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1;
+}
+#toolPicker a {
+  display: block;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #000;
+  text-align: center;
+  font-size: 12px;
+}
+#toolPicker a.on {
+  background-color: #ccc;
+}
+#colorPicker {
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 1;
+}
+#colorPicker a {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #000;
+}
+#colorPicker a.on {
+  border-color: #fff;
+}
+.ghost {
+  position: absolute;
+  left: 1px;
+  top: 1px;
+}

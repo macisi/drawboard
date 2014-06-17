@@ -1,0 +1,22 @@
+{
+  "name": "draw",
+  "version": "0.0.0",
+  "authors": [
+    "bian <macisi528@gmail.com>"
+  ],
+  "moduleType": [
+    "amd"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "requirejs": "~2.1.14"
+  }
+}
