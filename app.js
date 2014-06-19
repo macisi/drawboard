@@ -40,6 +40,9 @@ io.of('/draw').on('connection', function(socket){
     socket.on('onSyncStatus', function(data){
         socket.broadcast.emit('syncStatus', data);
     });
+    socket.on('onSyncSize', function(data){
+        socket.broadcast.emit('syncSize', data);
+    });
 });
 
 server.listen(3000);

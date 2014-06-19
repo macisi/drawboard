@@ -32,6 +32,14 @@ define(['angular', 'socket'], function(angular, io){
             {
                 type: "straight",
                 name: "straight line"
+            },
+            {
+                type: "square",
+                name: "square"
+            },
+            {
+                type: "circle",
+                name: "circle"
             }
         ];
         /**
@@ -52,6 +60,31 @@ define(['angular', 'socket'], function(angular, io){
                 value: "#00f"
             }
         ];
+        /**
+         * canvas sizes
+         * @type {{text: string, width: number, height: number}[]}
+         */
+        $scope.sizes = [
+            {
+                text: "480*320",
+                width: 480,
+                height: 320
+            },
+            {
+                text: "640*480",
+                width: 640,
+                height: 480
+            },
+            {
+                text: "960*640",
+                width: 960,
+                height: 640
+            }
+        ];
+        /**
+         * default canvas size
+         */
+        $scope.canvasSize = $scope.sizes[0];
         /**
          * set stroke color
          * @return {null}
@@ -87,6 +120,10 @@ define(['angular', 'socket'], function(angular, io){
             drawComponent.refresh(data);
         });
 
+        socket.on("syncSize", function(data){
+            $scope.canvasSize = data;
+        });
+
         /**
          * sync data by socket
          * @param data
@@ -94,6 +131,15 @@ define(['angular', 'socket'], function(angular, io){
         function syncStatus(data){
             socket.emit("onSyncStatus", data);
         }
+
+        /**
+         * watch canvas size change, send socket data when changed
+         */
+        $scope.$watch("canvasSize", function(newSize, originSize){
+            if (newSize.text !== originSize.text) {
+                socket.emit("onSyncSize", newSize);
+            }
+        });
     });
 
     app.factory("socket", ["$rootScope", "$location", function($rootScope, $location){
@@ -132,24 +178,39 @@ define(['angular', 'socket'], function(angular, io){
     /**
      * provider all kinds of draw methord
      */
+    app.directive("draw", function($window, socket, drawComponent){
+        return {
+            restrict: 'A',
+            link: function($scope, element){
+                var ctx = element[0].getContext("2d");
+
+                drawComponent.init({
+                    $parentScope: $scope,
+                    ctx: ctx,
+                    strokeColor: $scope.strokeColor,
+                    drawMode: $scope.drawMode
+                });
+            }
+        }
+    });
+
     app.factory("drawComponent", ["$rootScope", "$window", "$document", "socket", function($rootScope, $window, $document, socket){
         var _DC = {};
 
-        var width = $window.innerWidth - 2;
-        var height = $window.innerHeight - 2;
         var ghost = $document.find("canvas").eq(1);
         var ctx = ghost[0].getContext("2d");
         var isDrawing = false;
         var pos = {};
         var origin = {};
+        var width, height;
 
         /**
          * start to draw
          * @param e
          */
         function drawStart(e){
-            origin.x = e.x || e.clientX;
-            origin.y = e.y || e.clientY;
+            origin.x = e.layerX;
+            origin.y = e.layerY;
             ctx.beginPath();
             ctx.moveTo(origin.x, origin.y);
             isDrawing = true;
@@ -167,8 +228,8 @@ define(['angular', 'socket'], function(angular, io){
          */
         function drawing(e){
             if (!isDrawing) return;
-            pos.x = e.x || e.clientX;
-            pos.y = e.y || e.clientY;
+            pos.x = e.layerX;
+            pos.y = e.layerY;
 
             dispatch();
 
@@ -184,8 +245,8 @@ define(['angular', 'socket'], function(angular, io){
          * @param e
          */
         function drawEnd(e){
-            pos.x = e.x || e.clientX;
-            pos.y = e.y || e.clientY;
+            pos.x = e.layerX;
+            pos.y = e.layerY;
             isDrawing = false;
             merge();
 
@@ -210,6 +271,12 @@ define(['angular', 'socket'], function(angular, io){
                     break;
                 case "straight":
                     _DC.drawStraight(position, originPosition);
+                    break;
+                case "square":
+                    _DC.drawSquare(position, originPosition);
+                    break;
+                case "circle":
+                    _DC.drawCircle(position, originPosition);
                     break;
                 case "begin":
                     ctx.beginPath();
@@ -274,6 +341,8 @@ define(['angular', 'socket'], function(angular, io){
          */
         _DC.init = function(obj){
             angular.extend(this, obj);
+            width = _DC.$parentScope.canvasSize.width;
+            height = _DC.$parentScope.canvasSize.height;
         };
 
         /**
@@ -309,33 +378,35 @@ define(['angular', 'socket'], function(angular, io){
             ctx.stroke();
         };
 
+        /**
+         * draw square
+         * @param {object} position
+         * @param {object} originPosition
+         */
+        _DC.drawSquare = function(position, originPosition){
+            ctx.clearRect(0, 0, width, height);
+            ctx.beginPath();
+            ctx.moveTo(originPosition.x, originPosition.y);
+            ctx.lineTo(position.x, originPosition.y);
+            ctx.lineTo(position.x, position.y);
+            ctx.lineTo(originPosition.x, position.y);
+            ctx.closePath();
+            ctx.stroke();
+        };
+
+        /**
+         * draw circle
+         * @param {object} position
+         * @param {object} originPosition
+         */
+        _DC.drawCircle = function(position, originPosition){
+            ctx.clearRect(0, 0, width, height);
+            ctx.beginPath();
+            ctx.arc((position.x + originPosition.x) / 2, (position.y + originPosition.y) / 2, Math.abs(originPosition.x - position.x) / 2, 0, Math.PI * 2, false);
+            ctx.stroke();
+        };
+
         return _DC;
     }]);
-
-    app.directive("draw", function($window, socket, drawComponent){
-        return {
-            restrict: 'A',
-            link: function($scope, element){
-                var ctx = element[0].getContext("2d");
-
-                /**
-                 * get canvas width from window width
-                 * @type {number}
-                 */
-                $scope.width = $window.innerWidth - 2;
-                /**
-                 * get canvas height from window height
-                 * @type {number}
-                 */
-                $scope.height = $window.innerHeight - 2;
-
-                drawComponent.init({
-                    ctx: ctx,
-                    strokeColor: $scope.strokeColor,
-                    drawMode: $scope.drawMode
-                });
-            }
-        }
-    });
 
 });

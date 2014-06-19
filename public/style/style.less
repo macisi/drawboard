@@ -5,16 +5,12 @@ body {
   margin: 0;
   padding: 0;
 }
-#stage {
-  position: absolute;
-  border: 1px solid #000;
+
+.control-panel {
+  float: left;
+  width: 80px;
 }
 #toolPicker {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 1;
-
   a {
     display: block;
     width: 48px;
@@ -28,11 +24,6 @@ body {
   }
 }
 #colorPicker {
-  position: fixed;
-  right: 0;
-  top: 0;
-  z-index: 1;
-  
   a {
     display: block;
     width: 24px;
@@ -43,8 +34,15 @@ body {
     }
   }
 }
-.ghost {
+
+.stage {
+  position: relative;
+  margin-left: 80px;
+}
+
+.board, .ghost {
   position: absolute;
-  left: 1px;
-  top: 1px;
+  left: 0;
+  top: 0;
+  border: 1px solid #000;
 }

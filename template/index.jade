@@ -6,9 +6,12 @@ html(ng-app="app")
     link(rel="stylesheet", href="style/style.css")
     script(src="bower_components/requirejs/require.js", data-main="script/main")
 body(ng-controller="DrawCtrl")
-    aside#toolPicker
-        a(href="#", ng-class="{'on': mode.type === drawMode}", ng-repeat="mode in modes", ng-click="setMode()") {{mode.name}}
-    aside#colorPicker
-        a(href="#", ng-class="{'on': color.value === strokeColor}", ng-repeat="color in colors", style="background-color: {{color.value}}", ng-click="setColor()")
-    canvas#stage(draw, width="{{width}}", height="{{height}}")
-    canvas#ghost.ghost(width="{{width}}", height="{{height}}")
+    aside.control-panel
+        select(name="size", ng-model="canvasSize", ng-options="size.text for size in sizes track by size.text")
+        #toolPicker
+            a(href="#", ng-class="{'on': mode.type === drawMode}", ng-repeat="mode in modes", ng-click="setMode()") {{mode.name}}
+        #colorPicker
+            a(href="#", ng-class="{'on': color.value === strokeColor}", ng-repeat="color in colors", style="background-color: {{color.value}}", ng-click="setColor()")
+    .stage
+        canvas.board(draw, width="{{canvasSize.width}}", height="{{canvasSize.height}}")
+        canvas.ghost(width="{{canvasSize.width}}", height="{{canvasSize.height}}")
